@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ComponentItem {
   _id: string;
@@ -11,6 +12,7 @@ interface ComponentItem {
   type: "GIVE" | "TAKE";
   status: "AVAILABLE" | "SOLD";
   userId: {
+    _id: string; // Added _id here to check ownership
     name: string;
     branch: string;
     year: number;
@@ -20,9 +22,11 @@ interface ComponentItem {
 }
 
 export default function MarketplacePage() {
+  const router = useRouter();
   const [components, setComponents] = useState<ComponentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<"GIVE" | "TAKE">("GIVE");
+  const [requestingId, setRequestingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchComponents();
@@ -39,6 +43,33 @@ export default function MarketplacePage() {
       console.error("Failed to fetch components", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequest = async (componentId: string) => {
+    if (!confirm("Are you sure you want to initiate this request?")) return;
+
+    setRequestingId(componentId);
+    try {
+      const res = await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ componentId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Something went wrong");
+      } else {
+        alert("Request sent successfully! Check your dashboard.");
+        // Optional: Refresh list or redirect
+        router.refresh(); 
+      }
+    } catch (error) {
+      alert("Failed to send request");
+    } finally {
+      setRequestingId(null);
     }
   };
 
@@ -144,8 +175,13 @@ export default function MarketplacePage() {
                 </div>
               </div>
               <div className="bg-gray-50 px-4 py-4 sm:px-6">
-                <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
-                  {filterType === "GIVE" ? "Request to Borrow" : "I Have This"}
+                <button 
+                  onClick={() => handleRequest(item._id)}
+                  disabled={requestingId === item._id || item.status !== 'AVAILABLE'}
+                  className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none disabled:opacity-50"
+                >
+                  {requestingId === item._id ? "Processing..." : 
+                   filterType === "GIVE" ? "Request to Borrow" : "I Have This"}
                 </button>
               </div>
             </div>
