@@ -16,7 +16,6 @@ export async function POST(request: Request) {
       );
     }
 
-
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
@@ -41,19 +40,22 @@ export async function POST(request: Request) {
       { expiresIn: "7d" }
     );
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
-        message: "Login successful",
-        token,
-        user: {
-          name: user.name,
-          email: user.email,
-          _id: user._id,
-          branch: user.branch,
-        },
+        success: true,
+        message: "Login successfull!",
+        user: { name: user.name, id: user._id },
       },
       { status: 200 }
     );
+
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60,
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       { message: "Internal Server Error" },
