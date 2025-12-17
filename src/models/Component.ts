@@ -8,7 +8,7 @@ export interface IComponent {
   condition?: "NEW" | "USED" | "DAMAGED";
   description: string;
   imageUrl?: string;
-  status: "AVAILABLE" | "SOLD";
+  status: "AVAILABLE" | "BORROWED" | "SOLD"; // Added BORROWED
 }
 
 const ComponentSchema = new Schema<IComponent>(
@@ -22,7 +22,7 @@ const ComponentSchema = new Schema<IComponent>(
     imageUrl: { type: String },
     status: { 
       type: String, 
-      enum: ["AVAILABLE", "SOLD"], 
+      enum: ["AVAILABLE", "BORROWED", "SOLD"], 
       default: "AVAILABLE" 
     },
   },

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 interface Transaction {
   _id: string;
-  componentId: { title: string; category: string };
+  componentId: { title: string; category: string; type: "GIVE" | "TAKE" }; // Added type here
   lenderId: { _id: string; name: string; email: string };
   borrowerId: { _id: string; name: string; email: string };
   status: string;
@@ -16,7 +16,6 @@ export default function DashboardPage() {
   const [userId, setUserId] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  // Fetch data on load
   const fetchDashboard = async () => {
     try {
       const res = await fetch("/api/dashboard");
@@ -36,13 +35,8 @@ export default function DashboardPage() {
     fetchDashboard();
   }, []);
 
-  // Function to update transaction status
   const handleStatusUpdate = async (transactionId: string, newStatus: string) => {
-    const confirmMessage = newStatus === "ACTIVE" ? "Approve this request?" : 
-                           newStatus === "REJECTED" ? "Reject this request?" : 
-                           "Mark item as returned?";
-                           
-    if (!confirm(confirmMessage)) return;
+    if (!confirm("Confirm this action?")) return;
 
     try {
       const res = await fetch(`/api/transactions/${transactionId}`, {
@@ -52,31 +46,51 @@ export default function DashboardPage() {
       });
 
       if (res.ok) {
-        alert("Status updated successfully!");
-        fetchDashboard(); // Refresh the list to show changes
+        alert("Success!");
+        fetchDashboard();
       } else {
         alert("Failed to update status.");
       }
     } catch (error) {
-      console.error(error);
       alert("Something went wrong.");
     }
   };
 
-  // Filter: Requests sent to me (I am Lender)
-  const incomingRequests = transactions.filter(
-    (t) => t.lenderId._id === userId && t.status === "PENDING"
-  );
+  // --- LOGIC FIX START ---
 
-  // Filter: Active Loans (I lent it out, waiting for return)
+  // 1. Action Required (Pending approvals)
+  // Show if: (I am Lender AND Item was GIVE) OR (I am Borrower AND Item was TAKE/Request)
+  const actionRequired = transactions.filter((t) => {
+    if (t.status !== "PENDING") return false;
+
+    const isMyGiveItem = t.lenderId._id === userId && t.componentId.type === "GIVE";
+    const isMyTakeRequest = t.borrowerId._id === userId && t.componentId.type === "TAKE";
+    
+    return isMyGiveItem || isMyTakeRequest;
+  });
+
+  // 2. Pending on Others (I am waiting for them)
+  const pendingOnOthers = transactions.filter((t) => {
+    if (t.status !== "PENDING") return false;
+    
+    // Inverse of above
+    const iRequestedTheirItem = t.borrowerId._id === userId && t.componentId.type === "GIVE";
+    const iOfferedMyItem = t.lenderId._id === userId && t.componentId.type === "TAKE";
+
+    return iRequestedTheirItem || iOfferedMyItem;
+  });
+
+  // 3. Active Loans (Items I am currently lending to others)
   const activeLending = transactions.filter(
     (t) => t.lenderId._id === userId && t.status === "ACTIVE"
   );
 
-  // Filter: My Requests (I asked to borrow)
-  const myRequests = transactions.filter(
-    (t) => t.borrowerId._id === userId
+  // 4. Active Borrowing (Items I currently have from others)
+  const activeBorrowing = transactions.filter(
+    (t) => t.borrowerId._id === userId && t.status === "ACTIVE"
   );
+
+  // --- LOGIC FIX END ---
 
   if (loading) return <div className="text-center py-10">Loading Dashboard...</div>;
 
@@ -84,36 +98,40 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">My Dashboard</h1>
 
-      {/* Section 1: Incoming Requests (Action Required) */}
+      {/* SECTION 1: ACTION REQUIRED */}
       <div className="mb-10">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
-          Incoming Requests (Action Required)
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 border-red-200">
+          ⚠️ Action Required (Approve/Reject)
         </h2>
-        {incomingRequests.length === 0 ? (
-          <p className="text-gray-500 italic">No pending requests.</p>
+        {actionRequired.length === 0 ? (
+          <p className="text-gray-500 italic">You are all caught up.</p>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="bg-white shadow overflow-hidden sm:rounded-md border-l-4 border-red-400">
             <ul className="divide-y divide-gray-200">
-              {incomingRequests.map((t) => (
-                <li key={t._id} className="p-4 flex justify-between items-center">
+              {actionRequired.map((t) => (
+                <li key={t._id} className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                   <div>
-                    <p className="text-sm font-medium text-blue-600">
-                      {t.borrowerId.name} wants your {t.componentId.title}
+                    <p className="font-medium text-gray-900">
+                      {t.componentId.type === "GIVE" 
+                        ? `${t.borrowerId.name} wants your ${t.componentId.title}`
+                        : `${t.lenderId.name} says they have the ${t.componentId.title} you need`}
                     </p>
-                    <p className="text-xs text-gray-500">Requested on {new Date(t.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(t.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                   <div className="flex space-x-2">
                     <button 
                       onClick={() => handleStatusUpdate(t._id, "ACTIVE")}
-                      className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                      className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700"
                     >
-                      Approve
+                      Approve & Connect
                     </button>
                     <button 
                       onClick={() => handleStatusUpdate(t._id, "REJECTED")}
-                      className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                      className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm hover:bg-red-200"
                     >
-                      Reject
+                      Decline
                     </button>
                   </div>
                 </li>
@@ -123,23 +141,42 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Section 2: Active Lending */}
+      {/* SECTION 2: WAITING ON OTHERS */}
       <div className="mb-10">
         <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
-          Items I Lent Out (Active)
+          ⏳ Waiting for Approval
+        </h2>
+        {pendingOnOthers.length === 0 ? (
+          <p className="text-gray-500 italic">No pending requests sent.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {pendingOnOthers.map((t) => (
+              <div key={t._id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="font-medium text-gray-700">{t.componentId.title}</p>
+                <p className="text-sm text-gray-500">
+                  Waiting for {t.componentId.type === "GIVE" ? t.lenderId.name : t.borrowerId.name} to approve.
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* SECTION 3: ACTIVE LOANS */}
+      <div className="mb-10">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+          📤 Items I Lent (To Get Back)
         </h2>
         {activeLending.length === 0 ? (
-          <p className="text-gray-500 italic">You aren't lending anything right now.</p>
+          <p className="text-gray-500 italic">No items currently lent out.</p>
         ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <ul className="divide-y divide-gray-200">
               {activeLending.map((t) => (
                 <li key={t._id} className="p-4 flex justify-between items-center">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {t.componentId.title} <span className="text-gray-500">given to</span> {t.borrowerId.name}
-                    </p>
-                    <p className="text-xs text-green-600 font-semibold">Active</p>
+                    <p className="font-medium">{t.componentId.title}</p>
+                    <p className="text-sm text-gray-500">With: {t.borrowerId.name}</p>
                   </div>
                   <button 
                     onClick={() => handleStatusUpdate(t._id, "COMPLETED")}
@@ -154,34 +191,28 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Section 3: My Requests */}
-      <div className="mb-10">
+       {/* SECTION 4: ACTIVE BORROWING */}
+       <div className="mb-10">
         <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
-          My Requests
+          📥 Items I Borrowed (To Return)
         </h2>
-        {myRequests.length === 0 ? (
-          <p className="text-gray-500 italic">You haven't requested anything.</p>
+        {activeBorrowing.length === 0 ? (
+          <p className="text-gray-500 italic">You aren't borrowing anything.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {myRequests.map((t) => (
-              <div key={t._id} className="bg-white p-4 rounded-lg shadow border border-gray-100">
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-900">{t.componentId.title}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    t.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                    t.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                    t.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {t.status}
+          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul className="divide-y divide-gray-200">
+              {activeBorrowing.map((t) => (
+                <li key={t._id} className="p-4 flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">{t.componentId.title}</p>
+                    <p className="text-sm text-gray-500">From: {t.lenderId.name}</p>
+                  </div>
+                  <span className="text-green-600 text-sm font-bold bg-green-100 px-3 py-1 rounded-full">
+                    Active
                   </span>
-                </div>
-                <p className="text-sm text-gray-500">Owner: {t.lenderId.name}</p>
-                <p className="text-xs text-gray-400 mt-2">
-                  {new Date(t.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>

@@ -8,7 +8,8 @@ export async function GET() {
   try {
     await connectToDatabase();
     
-    const components = await Component.find({})
+    // FILTER ADDED: Only fetch items with status "AVAILABLE"
+    const components = await Component.find({ status: "AVAILABLE" })
       .populate("userId", "name branch year reputationScore")
       .sort({ createdAt: -1 });
 
@@ -23,7 +24,6 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-
     const token = request.cookies.get("token")?.value;
 
     if (!token) {
