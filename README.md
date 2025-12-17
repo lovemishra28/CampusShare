@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CampusShare - Component Lending & Project Showcase
 
-## Getting Started
+CampusShare is a full-stack web application designed for university students to foster a collaborative and resourceful campus environment. It allows students to borrow and lend electronic components, showcase their personal projects, and build a reputation within the community.
 
-First, run the development server:
+![CampusShare Demo](https://place-hold.it/1200x600?text=CampusShare+App+Screenshot&fontsize=48)
+*A placeholder for a live demo screenshot.*
+
+---
+
+## ✨ Key Features
+
+- **Component Marketplace**: Users can list components they are willing to lend (`GIVE`) or post requests for components they need (`TAKE`).
+- **Transaction System**: A complete workflow for managing borrow/lend requests:
+  - **Pending**: Initial state of a request.
+  - **Active**: Request approved by the lender. Contact details are shared.
+  - **Completed**: Item returned and transaction closed.
+  - **Rejected**: Request declined by the lender.
+- **User Authentication**: Secure user registration and login system using JWT stored in HTTP-only cookies.
+- **Personalized Dashboard**: A central hub for users to manage their transactions, review requests, and track active exchanges.
+- **User Profiles & Reputation**: Public user profiles showcasing their projects, inventory, and a **Reputation Score** that increases with positive community interactions.
+- **Project Showcase**: A dedicated section for students to upload and document their personal projects, creating a portfolio of their work.
+- **Dynamic Theming**:
+  - Supports both **Light Mode** and **Dark Mode**.
+  - The theme is easily customizable by changing CSS variables in a single file (`src/app/globals.css`).
+- **Responsive Design**: A mobile-first design that works seamlessly across all devices.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Database**: [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/)
+- **Authentication**: [JWT](https://jwt.io/) & [Bcrypt.js](https://www.npmjs.com/package/bcrypt)
+- **Deployment**: [Vercel](https://vercel.com/)
+
+---
+
+## 🚀 Getting Started
+
+Follow these instructions to get a local copy up and running.
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/en/) (v18.x or later)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- A [MongoDB](https://www.mongodb.com/try/download/community) instance (local or cloud-based like MongoDB Atlas)
+
+### Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/borrow-project.git
+    cd borrow-project
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+3.  **Set up environment variables:**
+    Create a file named `.env.local` in the root of your project and add the following variables.
+
+    ```env
+    MONGODB_URI=your_mongodb_connection_string
+    JWT_SECRET=your_super_secret_jwt_key
+    ```
+
+    - `MONGODB_URI`: Your connection string for the MongoDB database.
+    - `JWT_SECRET`: A long, random, and secret string used to sign the JSON Web Tokens.
+
+### Running the Development Server
+
+Execute the following command to start the server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🌐 Deployment
 
-## Learn More
+The easiest way to deploy this Next.js app is to use the [Vercel Platform](https://vercel.com/new).
 
-To learn more about Next.js, take a look at the following resources:
+- **Connect your Git repository** to Vercel.
+- **Configure Environment Variables**: Add the `MONGODB_URI` and `JWT_SECRET` in the Vercel project settings.
+- **Deploy**: Vercel will automatically build and deploy your application.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
