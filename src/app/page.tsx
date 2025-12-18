@@ -191,22 +191,22 @@ export default async function Home() {
               </h2>
               <div className="grid md:grid-cols-4 gap-8 text-center">
                 <div className="relative">
-                  <div className="text-6xl font-bold text-muted/20 mb-4">01</div>
+                  <div className="text-6xl font-bold text-[#FF6D1F] mb-4">01</div>
                   <h4 className="text-lg font-semibold text-foreground mb-2">Sign Up</h4>
                   <p className="text-sm text-muted-foreground">Register with your college email ID to verify your student status.</p>
                 </div>
                 <div className="relative">
-                  <div className="text-6xl font-bold text-muted/20 mb-4">02</div>
+                  <div className="text-6xl font-bold text-[#FF6D1F] mb-4">02</div>
                   <h4 className="text-lg font-semibold text-foreground mb-2">List or Request</h4>
                   <p className="text-sm text-muted-foreground">Post extra components you own or request items you need.</p>
                 </div>
                 <div className="relative">
-                  <div className="text-6xl font-bold text-muted/20 mb-4">03</div>
+                  <div className="text-6xl font-bold text-[#FF6D1F] mb-4">03</div>
                   <h4 className="text-lg font-semibold text-foreground mb-2">Connect</h4>
                   <p className="text-sm text-muted-foreground">Approve requests via the dashboard and meet on campus.</p>
                 </div>
                 <div className="relative">
-                  <div className="text-6xl font-bold text-muted/20 mb-4">04</div>
+                  <div className="text-6xl font-bold text-[#FF6D1F] mb-4">04</div>
                   <h4 className="text-lg font-semibold text-foreground mb-2">Build & Return</h4>
                   <p className="text-sm text-muted-foreground">Complete your project, return the item, and earn reputation points.</p>
                 </div>
